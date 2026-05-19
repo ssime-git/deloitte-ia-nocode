@@ -77,9 +77,14 @@ services:
     command: ["node /bootstrap-scripts/preload-n8n.mjs"]
     volumes:
       - n8n_data:/home/node/.n8n
+      - ./data:/home/node/.n8n-files/data:ro
+      - ./corpus:/home/node/.n8n-files/corpus:ro
       - ./n8n/workflows:/workflows:ro
       - ./n8n/bootstrap:/bootstrap:ro
       - ./scripts:/bootstrap-scripts:ro
+      - ./data:/data:ro
+      - ./corpus:/corpus:ro
+      - ./project:/project:ro
     environment:
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres

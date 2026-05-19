@@ -36,7 +36,7 @@
             {
               "id": "d6-question",
               "name": "chatInput",
-              "value": "Question métier: quelle règle décrit l'écart entre un montant URSSAF observé et le montant attendu base_urssaf * taux_urssaf ? Compare une réponse naïve avec une réponse contrôlée par MCP.",
+              "value": "Question métier: quelle règle du corpus décrit qu'un montant_urssaf observé diffère du montant attendu calculé comme base_urssaf * taux_urssaf ? Utilise le tool MCP search_documentary_sources avec les IDs URSSAF-CTRL-002 et AUDIT-EVIDENCE-001, puis compare une réponse naïve avec une réponse contrôlée.",
               "type": "string"
             },
             {
@@ -48,7 +48,7 @@
             {
               "id": "d6-tool-prompt",
               "name": "tool_prompt",
-              "value": "Puis vérifie la réponse avec le tool MCP search_documentary_sources et indique la différence de gouvernance et de fiabilité.",
+              "value": "Puis vérifie la réponse avec le tool MCP search_documentary_sources en priorisant URSSAF-CTRL-002 et AUDIT-EVIDENCE-001, et indique la différence de gouvernance et de fiabilité.",
               "type": "string"
             },
             {
@@ -73,7 +73,7 @@
     {
       "parameters": {
         "options": {
-          "systemMessage": "Tu es un agent de comparaison pour audit paie. Commence par une hypothèse naïve, puis utilise le tool MCP pour vérifier la règle documentaire. Tu dois distinguer clairement: reponse_naive, reponse_controlee, comparaison, limites. N'invente pas de source et n'explique pas l'infrastructure MCP."
+          "systemMessage": "Tu es un agent de comparaison pour audit paie. Commence par une hypothèse naïve, puis utilise le tool MCP pour vérifier la règle documentaire. Pour cette question, priorise explicitement les sources URSSAF-CTRL-002 et AUDIT-EVIDENCE-001 via search_documentary_sources. Tu dois distinguer clairement: reponse_naive, reponse_controlee, comparaison, limites. N'invente pas de source et n'explique pas l'infrastructure MCP."
         }
       },
       "id": "d6-agent-compare",

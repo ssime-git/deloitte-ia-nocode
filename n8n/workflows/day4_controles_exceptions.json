@@ -71,7 +71,7 @@
             {
               "id": "day4-row-id",
               "name": "row_id",
-              "value": "={{ 'ROW-' + String($index + 1).padStart(4, '0') }}",
+              "value": "={{ $json.row_id ?? ('ROW-' + String($itemIndex + 1).padStart(4, '0')) }}",
               "type": "string"
             },
             {

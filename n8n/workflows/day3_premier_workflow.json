@@ -71,7 +71,7 @@
             {
               "id": "day3-row-id",
               "name": "row_id",
-              "value": "={{ 'ROW-' + String($index + 1).padStart(4, '0') }}",
+              "value": "={{ $json.row_id ?? ('ROW-' + String($itemIndex + 1).padStart(4, '0')) }}",
               "type": "string"
             },
             {
@@ -119,7 +119,13 @@
             {
               "id": "day3-preview",
               "name": "audit_preview",
-              "value": "={{ 'Ligne ' + (String($index + 1).padStart(4, '0')) + ' - ' + $json.matricule_salarie + ' - ' + $json.periode_declaration + ' - base ' + $json.base_urssaf + ' - taux ' + $json.taux_urssaf + ' - montant ' + $json.montant_urssaf }}",
+              "value": "={{ 'Ligne ' + String($itemIndex + 1).padStart(4, '0') + ' - ' + $json.matricule_salarie + ' - ' + $json.periode_declaration + ' - base ' + $json.base_urssaf + ' - taux ' + $json.taux_urssaf + ' - montant ' + $json.montant_urssaf }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-chat-input",
+              "name": "chatInput",
+              "value": "={{ 'Analyse cette ligne de paie normalisée et renvoie un JSON strict: ' + JSON.stringify($json) }}",
               "type": "string"
             }
           ]
