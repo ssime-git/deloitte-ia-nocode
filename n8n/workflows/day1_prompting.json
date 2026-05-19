@@ -1,0 +1,308 @@
+{
+  "name": "Jour 1 - Prompting audit",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Jour 1 - Prompting audit\n\nFlux réduit et lisible:\n1. Chat Trigger\n2. Contexte d'audit\n3. Basic LLM Chain\n4. Structured Output Parser\n5. Test de garde-fou\n\nObjectif: montrer comment une consigne métier et un format de sortie stable produisent une réponse exploitable sans code.",
+        "height": 240,
+        "width": 560,
+        "color": 5
+      },
+      "id": "day1-note-overview",
+      "name": "Vue d'ensemble",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "day1-chat-trigger",
+      "name": "Chat Trigger",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        360
+      ],
+      "webhookId": "f0f6f02b-6ad1-4dd6-8c0f-7f4dc2e07d11"
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day1-chat-input",
+              "name": "chatInput",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "day1-clause",
+              "name": "clause",
+              "value": "Prime annuelle indexée sur la performance, calculée sur la rémunération brute, avec contrôle de cohérence avant validation audit.",
+              "type": "string"
+            },
+            {
+              "id": "day1-cadre",
+              "name": "cadre_pedagogique",
+              "value": "Répondre comme un auditeur paie senior et garder une posture factuelle.",
+              "type": "string"
+            },
+            {
+              "id": "day1-rgpd",
+              "name": "consigne_rgpd",
+              "value": "Ne pas inventer de données nominatives et rappeler la nécessité d'anonymiser.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day1-context",
+      "name": "Contexte d'audit",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "prompt": {
+          "values": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ $json.chatInput }}"
+            }
+          ]
+        },
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Tu es un auditeur paie senior. On te soumet une clause contractuelle anonymisée.\n\nRéponds UNIQUEMENT avec un objet JSON valide. Aucun texte hors JSON.\n\nChamps obligatoires :\n- lecture_metier : résumé métier court\n- risques_audit : liste de risques\n- questions_de_controle : liste d'objets {question: string}\n- anonymisation_requise : booléen\n- niveau_sensibilite : exactement Faible, Moyen ou Eleve\n\nLa réponse doit rester prudente si la clause est ambiguë."
+        }
+      },
+      "id": "day1-chain",
+      "name": "Analyser clause",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        780,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"lecture_metier\": \"résumé métier court\",\n  \"risques_audit\": [\"risque 1\", \"risque 2\"],\n  \"questions_de_controle\": [{\"question\": \"question à poser\"}],\n  \"anonymisation_requise\": false,\n  \"niveau_sensibilite\": \"Moyen\"\n}"
+      },
+      "id": "day1-output-parser",
+      "name": "Format JSON attendu",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        540
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "id"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "day1-openai",
+      "name": "OpenAI Gateway",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        720
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "llBbatZjnM6zdCyD",
+          "name": "OpenAI Liora Gateway"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "id": "day1-if-valid",
+              "leftValue": "={{ ['Faible', 'Moyen', 'Eleve'].includes($json.niveau_sensibilite) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      },
+      "id": "day1-if",
+      "name": "Sensibilite valide ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        360
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day1-ok-1",
+              "name": "validation_format",
+              "value": "ok",
+              "type": "string"
+            },
+            {
+              "id": "day1-ok-2",
+              "name": "message",
+              "value": "Format respecté - ouvrir ce nœud pour voir l'analyse complète",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day1-result-ok",
+      "name": "Resultat OK",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day1-err-1",
+              "name": "validation_format",
+              "value": "erreur",
+              "type": "string"
+            },
+            {
+              "id": "day1-err-2",
+              "name": "message",
+              "value": "={{ 'niveau_sensibilite invalide : ' + $json.niveau_sensibilite + ' - attendu : Faible, Moyen ou Eleve' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day1-result-err",
+      "name": "Erreur format",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contexte d'audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Contexte d'audit": {
+      "main": [
+        [
+          {
+            "node": "Analyser clause",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyser clause": {
+      "main": [
+        [
+          {
+            "node": "Sensibilite valide ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sensibilite valide ?": {
+      "main": [
+        [
+          {
+            "node": "Resultat OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Erreur format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Gateway": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Analyser clause",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format JSON attendu": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Analyser clause",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Jour 1 - Prompting audit: chat-first, context setup, one LLM call, structured output parsing, and a simple guardrail branch."
+  }
+}

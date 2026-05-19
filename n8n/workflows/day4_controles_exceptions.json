@@ -1,0 +1,599 @@
+{
+  "name": "Jour 4 - Contrôles et exceptions",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Jour 4 - Controles et exceptions\n\nFlux deterministe et court:\n1. Déclencheur manuel\n2. Lire CSV\n3. Parser CSV\n4. Normaliser les lignes\n5. Regrouper doublons\n6. Controle 1 - doublon salarié/période\n7. Controle 2 - base x taux x montant\n8. Controle 3 - sortie active\n\nLe Jour 4 reste sans LLM: on apprend à formuler et à exécuter des regles stables, avec une branche dédiée aux doublons, puis à produire des fiches exception lisibles.",
+        "height": 260,
+        "width": 620,
+        "color": 5
+      },
+      "id": "day4-note-overview",
+      "name": "Vue d'ensemble",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "day4-trigger",
+      "name": "Déclencheur Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "/home/node/.n8n-files/data/dsn-like/raw/payroll_dsn_like_raw.csv",
+        "options": {}
+      },
+      "id": "day4-read-file",
+      "name": "Lire CSV de paie",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        500,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromFile",
+        "fileFormat": "csv",
+        "binaryPropertyName": "data",
+        "options": {
+          "delimiter": ";",
+          "headerRow": true,
+          "enableBOM": true
+        }
+      },
+      "id": "day4-parse-csv",
+      "name": "Parser le CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        740,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day4-row-id",
+              "name": "row_id",
+              "value": "={{ 'ROW-' + String($index + 1).padStart(4, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-period",
+              "name": "periode_declaration_clean",
+              "value": "={{ String($json.periode_declaration).trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-siret",
+              "name": "siret_etablissement_clean",
+              "value": "={{ String($json.siret_etablissement).trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-employee",
+              "name": "matricule_salarie_clean",
+              "value": "={{ String($json.matricule_salarie).trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-key",
+              "name": "employee_period_key",
+              "value": "={{ String($json.matricule_salarie).trim() + '|' + String($json.periode_declaration).trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-nir-mask",
+              "name": "nir_fictif_masked",
+              "value": "={{ String($json.nir_fictif ?? '').trim() ? '***MASKED***' : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-salary",
+              "name": "salaire_brut_num",
+              "value": "={{ Number($json.salaire_brut || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day4-base",
+              "name": "base_urssaf_num",
+              "value": "={{ Number($json.base_urssaf || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day4-rate",
+              "name": "taux_urssaf_num",
+              "value": "={{ Number($json.taux_urssaf || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day4-amount",
+              "name": "montant_urssaf_num",
+              "value": "={{ Number($json.montant_urssaf || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day4-expected",
+              "name": "montant_urssaf_attendu",
+              "value": "={{ Math.round(Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0) * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "day4-gap",
+              "name": "ecart_urssaf",
+              "value": "={{ Math.round((Number($json.montant_urssaf || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "day4-exit-date",
+              "name": "date_sortie_clean",
+              "value": "={{ String($json.date_sortie ?? '').trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-status",
+              "name": "statut_paie_clean",
+              "value": "={{ String($json.statut_paie ?? '').trim().toUpperCase() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "day4-normalise",
+      "name": "Normaliser les lignes",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        980,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "count",
+              "field": "row_id"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "employee_period_key",
+        "options": {}
+      },
+      "id": "day4-summarize-duplicates",
+      "name": "Regrouper doublons",
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1220,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "day4-cond-001",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ Number($json.count_row_id || 0) }}",
+              "rightValue": 1
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day4-filter-001",
+      "name": "CTRL-001 Doublon salarié/période",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1480,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day4-exc-001",
+              "name": "exception_id",
+              "value": "EXC_DUPLICATE_EMPLOYEE_PERIOD",
+              "type": "string"
+            },
+            {
+              "id": "day4-row-001",
+              "name": "row_id",
+              "value": "={{ $json.employee_period_key }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-ctrl-001",
+              "name": "control_id",
+              "value": "CTRL-001",
+              "type": "string"
+            },
+            {
+              "id": "day4-sev-001",
+              "name": "severity",
+              "value": "High",
+              "type": "string"
+            },
+            {
+              "id": "day4-field-001",
+              "name": "field",
+              "value": "matricule_salarie|periode_declaration",
+              "type": "string"
+            },
+            {
+              "id": "day4-observed-001",
+              "name": "observed_value",
+              "value": "={{ $json.employee_period_key }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-rule-001",
+              "name": "expected_rule",
+              "value": "Le même salarié et la même période de déclaration apparaissent plus d'une fois",
+              "type": "string"
+            },
+            {
+              "id": "day4-evidence-001",
+              "name": "evidence_ref",
+              "value": "={{ 'EVD-CTRL-001-' + $json.employee_period_key }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "day4-exc-001",
+      "name": "Fiche exception CTRL-001",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "day4-cond-007",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ Math.abs(Number($json.ecart_urssaf || 0)) }}",
+              "rightValue": 0.02
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day4-filter-007",
+      "name": "CTRL-007 Base x taux x montant",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1260,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day4-exc-007",
+              "name": "exception_id",
+              "value": "EXC_URSSAF_AMOUNT_INCONSISTENT",
+              "type": "string"
+            },
+            {
+              "id": "day4-row-007",
+              "name": "row_id",
+              "value": "={{ $json.row_id }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-ctrl-007",
+              "name": "control_id",
+              "value": "CTRL-007",
+              "type": "string"
+            },
+            {
+              "id": "day4-sev-007",
+              "name": "severity",
+              "value": "High",
+              "type": "string"
+            },
+            {
+              "id": "day4-field-007",
+              "name": "field",
+              "value": "montant_urssaf",
+              "type": "string"
+            },
+            {
+              "id": "day4-observed-007",
+              "name": "observed_value",
+              "value": "={{ String($json.montant_urssaf_num) }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-rule-007",
+              "name": "expected_rule",
+              "value": "Le montant URSSAF doit être égal à base_urssaf × taux_urssaf à 0,02 près",
+              "type": "string"
+            },
+            {
+              "id": "day4-evidence-007",
+              "name": "evidence_ref",
+              "value": "={{ 'EVD-CTRL-007-' + $json.row_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "day4-exc-007",
+      "name": "Fiche exception CTRL-007",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "day4-cond-008",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "leftValue": "={{ String($json.date_sortie_clean || '').trim() !== '' && String($json.statut_paie_clean || '').trim() === 'ACTIF' }}",
+              "rightValue": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day4-filter-008",
+      "name": "CTRL-008 Sortie active",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1260,
+        680
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day4-exc-008",
+              "name": "exception_id",
+              "value": "EXC_EXITED_EMPLOYEE_ACTIVE",
+              "type": "string"
+            },
+            {
+              "id": "day4-row-008",
+              "name": "row_id",
+              "value": "={{ $json.row_id }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-ctrl-008",
+              "name": "control_id",
+              "value": "CTRL-008",
+              "type": "string"
+            },
+            {
+              "id": "day4-sev-008",
+              "name": "severity",
+              "value": "Medium",
+              "type": "string"
+            },
+            {
+              "id": "day4-field-008",
+              "name": "field",
+              "value": "statut_paie",
+              "type": "string"
+            },
+            {
+              "id": "day4-observed-008",
+              "name": "observed_value",
+              "value": "={{ $json.statut_paie_clean }}",
+              "type": "string"
+            },
+            {
+              "id": "day4-rule-008",
+              "name": "expected_rule",
+              "value": "Un salarié avec une date de sortie ne doit pas rester actif",
+              "type": "string"
+            },
+            {
+              "id": "day4-evidence-008",
+              "name": "evidence_ref",
+              "value": "={{ 'EVD-CTRL-008-' + $json.row_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": false,
+        "options": {}
+      },
+      "id": "day4-exc-008",
+      "name": "Fiche exception CTRL-008",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        680
+      ]
+    }
+  ],
+  "connections": {
+    "Déclencheur Manuel": {
+      "main": [
+        [
+          {
+            "node": "Lire CSV de paie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire CSV de paie": {
+      "main": [
+        [
+          {
+            "node": "Parser le CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser le CSV": {
+      "main": [
+        [
+          {
+            "node": "Normaliser les lignes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normaliser les lignes": {
+      "main": [
+        [
+          {
+            "node": "Regrouper doublons",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CTRL-007 Base x taux x montant",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CTRL-008 Sortie active",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Regrouper doublons": {
+      "main": [
+        [
+          {
+            "node": "CTRL-001 Doublon salarié/période",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CTRL-001 Doublon salarié/période": {
+      "main": [
+        [
+          {
+            "node": "Fiche exception CTRL-001",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CTRL-007 Base x taux x montant": {
+      "main": [
+        [
+          {
+            "node": "Fiche exception CTRL-007",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CTRL-008 Sortie active": {
+      "main": [
+        [
+          {
+            "node": "Fiche exception CTRL-008",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Jour 4 - Controles et exceptions: trois controles deterministes uniquement, sans LLM, sur une ligne CSV normalisee."
+  }
+}

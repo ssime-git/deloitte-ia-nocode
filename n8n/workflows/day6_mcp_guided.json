@@ -1,0 +1,227 @@
+{
+  "name": "Jour 6 - MCP guidé",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Jour 6 - MCP guidé\n\nFlux minimal pour comparer une réponse naïve et un accès outillé:\n1. Déclencheur manuel\n2. Question d'audit\n3. Agent de comparaison\n4. Tool MCP\n5. Sortie comparative\n\nObjectif: voir ce que le modèle propose seul, puis ce que l'outil MCP permet de contrôler.",
+        "height": 260,
+        "width": 640,
+        "color": 5
+      },
+      "id": "d6-note-overview",
+      "name": "Vue d'ensemble",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d6-trigger",
+      "name": "Déclencheur Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6-question",
+              "name": "chatInput",
+              "value": "Question métier: quelle règle décrit l'écart entre un montant URSSAF observé et le montant attendu base_urssaf * taux_urssaf ? Compare une réponse naïve avec une réponse contrôlée par MCP.",
+              "type": "string"
+            },
+            {
+              "id": "d6-naive-prompt",
+              "name": "naive_prompt",
+              "value": "Réponds sans outil, comme si tu improvisais une hypothèse rapide.",
+              "type": "string"
+            },
+            {
+              "id": "d6-tool-prompt",
+              "name": "tool_prompt",
+              "value": "Puis vérifie la réponse avec le tool MCP search_documentary_sources et indique la différence de gouvernance et de fiabilité.",
+              "type": "string"
+            },
+            {
+              "id": "d6-question-tag",
+              "name": "question_tag",
+              "value": "audit_urssaf_compare_mcp",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d6-question-node",
+      "name": "Question d'audit",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        380,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Tu es un agent de comparaison pour audit paie. Commence par une hypothèse naïve, puis utilise le tool MCP pour vérifier la règle documentaire. Tu dois distinguer clairement: reponse_naive, reponse_controlee, comparaison, limites. N'invente pas de source et n'explique pas l'infrastructure MCP."
+        }
+      },
+      "id": "d6-agent-compare",
+      "name": "Agent de comparaison",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        660,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "id"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "d6-openai",
+      "name": "OpenAI Gateway",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        660,
+        620
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "llBbatZjnM6zdCyD",
+          "name": "OpenAI Liora Gateway"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sseEndpoint": "={{ $env.MCP_SSE_ENDPOINT || 'http://mcp-server:8000/sse' }}"
+      },
+      "id": "d6-mcp",
+      "name": "MCP outils guidés",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1,
+      "position": [
+        660,
+        860
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6-output-status",
+              "name": "statut",
+              "value": "comparaison_achevee",
+              "type": "string"
+            },
+            {
+              "id": "d6-output-question",
+              "name": "question",
+              "value": "={{ $(\"Question d'audit\").item.json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "d6-output-report",
+              "name": "comparaison",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d6-comparison-output",
+      "name": "Sortie comparative",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        940,
+        380
+      ]
+    }
+  ],
+  "connections": {
+    "Déclencheur Manuel": {
+      "main": [
+        [
+          {
+            "node": "Question d'audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question d'audit": {
+      "main": [
+        [
+          {
+            "node": "Agent de comparaison",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent de comparaison": {
+      "main": [
+        [
+          {
+            "node": "Sortie comparative",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Gateway": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent de comparaison",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MCP outils guidés": {
+      "ai_tool": [
+        [
+          {
+            "node": "Agent de comparaison",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Jour 6 - MCP guidé: une question métier, une comparaison entre réponse naïve et réponse outillée, et un seul client MCP sans debug d'infrastructure."
+  }
+}

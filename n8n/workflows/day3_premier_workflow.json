@@ -1,0 +1,341 @@
+{
+  "name": "Jour 3 - Premier workflow utile",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Jour 3 - Premier workflow utile\n\nFlux réduit:\n1. Déclencheur manuel\n2. Lire CSV\n3. Parser CSV\n4. Limiter l'echantillon\n5. Preparer la ligne\n6. Structurer avec un seul appel LLM\n7. Exposer la synthese\n\nLe but du jour est de construire un petit flux lisible autour d'un fichier réel, sans basculer vers la grosse logique de controle du Jour 4.",
+        "height": 260,
+        "width": 600,
+        "color": 5
+      },
+      "id": "day3-note-overview",
+      "name": "Vue d'ensemble",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "day3-trigger",
+      "name": "Déclencheur Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "fileSelector": "/home/node/.n8n-files/data/dsn-like/raw/payroll_dsn_like_raw.csv",
+        "options": {}
+      },
+      "id": "day3-read-file",
+      "name": "Lire CSV de paie",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        500,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "fromFile",
+        "fileFormat": "csv",
+        "binaryPropertyName": "data",
+        "options": {
+          "delimiter": ";",
+          "headerRow": true,
+          "enableBOM": true
+        }
+      },
+      "id": "day3-parse-csv",
+      "name": "Parser le CSV",
+      "type": "n8n-nodes-base.spreadsheetFile",
+      "typeVersion": 2,
+      "position": [
+        740,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day3-row-id",
+              "name": "row_id",
+              "value": "={{ 'ROW-' + String($index + 1).padStart(4, '0') }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-employee-period",
+              "name": "employee_period_key",
+              "value": "={{ String($json.matricule_salarie).trim() + '|' + String($json.periode_declaration).trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-nir-masked",
+              "name": "nir_fictif_masked",
+              "value": "={{ String($json.nir_fictif ?? '').trim() ? '***MASKED***' : '' }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-base-num",
+              "name": "base_urssaf_num",
+              "value": "={{ Number($json.base_urssaf || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day3-rate-num",
+              "name": "taux_urssaf_num",
+              "value": "={{ Number($json.taux_urssaf || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day3-amount-num",
+              "name": "montant_urssaf_num",
+              "value": "={{ Number($json.montant_urssaf || 0) }}",
+              "type": "number"
+            },
+            {
+              "id": "day3-expected-amount",
+              "name": "montant_urssaf_attendu",
+              "value": "={{ Math.round(Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0) * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "day3-gap",
+              "name": "ecart_urssaf",
+              "value": "={{ Math.round((Number($json.montant_urssaf || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "day3-preview",
+              "name": "audit_preview",
+              "value": "={{ 'Ligne ' + (String($index + 1).padStart(4, '0')) + ' - ' + $json.matricule_salarie + ' - ' + $json.periode_declaration + ' - base ' + $json.base_urssaf + ' - taux ' + $json.taux_urssaf + ' - montant ' + $json.montant_urssaf }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day3-prepare",
+      "name": "Préparer la ligne",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1220,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "prompt": {
+          "values": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ 'Analyse cette ligne de paie normalisee et renvoie un JSON strict: ' + JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Tu es un assistant d'audit paie. Analyse une seule ligne normalisee.\n\nRéponds uniquement avec un objet JSON valide. Aucun texte hors JSON.\n\nChamps attendus:\n- row_id\n- resume_metier\n- points_de_vigilance\n- controles_a_revoir\n- action_proposee\n- niveau_confiance\n\nSi une information manque, signale-la sans inventer."
+        }
+      },
+      "id": "day3-chain",
+      "name": "Structurer le cas",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        1460,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"row_id\": \"ROW-0001\",\n  \"resume_metier\": \"Ligne de paie normalisee\",\n  \"points_de_vigilance\": [\"point 1\", \"point 2\"],\n  \"controles_a_revoir\": [\"CTRL-001\"],\n  \"action_proposee\": \"Verifier la coherence de la ligne\",\n  \"niveau_confiance\": \"Moyen\"\n}"
+      },
+      "id": "day3-output-parser",
+      "name": "Format JSON attendu",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        1460,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "id"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "day3-openai",
+      "name": "OpenAI Gateway",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1460,
+        780
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "llBbatZjnM6zdCyD",
+          "name": "OpenAI Liora Gateway"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day3-summary-1",
+              "name": "row_id",
+              "value": "={{ $json.output?.row_id ?? $json.text?.row_id ?? $json.row_id }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-summary-2",
+              "name": "resume_metier",
+              "value": "={{ $json.output?.resume_metier ?? $json.text?.resume_metier ?? $json.resume_metier }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-summary-3",
+              "name": "points_de_vigilance",
+              "value": "={{ $json.output?.points_de_vigilance ?? $json.text?.points_de_vigilance ?? $json.points_de_vigilance }}",
+              "type": "array"
+            },
+            {
+              "id": "day3-summary-4",
+              "name": "controles_a_revoir",
+              "value": "={{ $json.output?.controles_a_revoir ?? $json.text?.controles_a_revoir ?? $json.controles_a_revoir }}",
+              "type": "array"
+            },
+            {
+              "id": "day3-summary-5",
+              "name": "action_proposee",
+              "value": "={{ $json.output?.action_proposee ?? $json.text?.action_proposee ?? $json.action_proposee }}",
+              "type": "string"
+            },
+            {
+              "id": "day3-summary-6",
+              "name": "niveau_confiance",
+              "value": "={{ $json.output?.niveau_confiance ?? $json.text?.niveau_confiance ?? $json.niveau_confiance }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day3-output",
+      "name": "Synthese du workflow",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1700,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Déclencheur Manuel": {
+      "main": [
+        [
+          {
+            "node": "Lire CSV de paie",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lire CSV de paie": {
+      "main": [
+        [
+          {
+            "node": "Parser le CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser le CSV": {
+      "main": [
+        [
+          {
+            "node": "Préparer la ligne",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer la ligne": {
+      "main": [
+        [
+          {
+            "node": "Structurer le cas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structurer le cas": {
+      "main": [
+        [
+          {
+            "node": "Synthese du workflow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Gateway": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Structurer le cas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format JSON attendu": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Structurer le cas",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Jour 3 - Premier workflow utile: lecture CSV, normalisation légère, un seul appel LLM et sortie structuree lisible."
+  }
+}

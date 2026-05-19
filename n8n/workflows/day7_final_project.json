@@ -1,0 +1,509 @@
+{
+  "name": "Jour 7 - Projet final",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Jour 7 - Projet final\n\nFlux minimal d'assemblage:\n1. Entrée de scénario\n2. Logique d'exceptions J4\n3. Sourcing J2\n4. Synthèse J5\n5. Validation humaine\n6. Branche validée ou rejetée\n\nAucune réindexation, aucune initialisation d'infrastructure: le workflow assemble seulement des briques déjà validées.",
+        "height": 280,
+        "width": 650,
+        "color": 5
+      },
+      "id": "d7-note-overview",
+      "name": "Vue d'ensemble",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d7-trigger",
+      "name": "Déclencheur Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        120,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7-exception-id",
+              "name": "exception_id",
+              "value": "EXC_URSSAF_AMOUNT_INCONSISTENT",
+              "type": "string"
+            },
+            {
+              "id": "d7-base",
+              "name": "base_urssaf",
+              "value": "1200",
+              "type": "number"
+            },
+            {
+              "id": "d7-rate",
+              "name": "taux_urssaf",
+              "value": "0.22",
+              "type": "number"
+            },
+            {
+              "id": "d7-observed",
+              "name": "montant_urssaf_observe",
+              "value": "301",
+              "type": "number"
+            },
+            {
+              "id": "d7-source-id",
+              "name": "source_id",
+              "value": "URSSAF-CTRL-002",
+              "type": "string"
+            },
+            {
+              "id": "d7-chat-input",
+              "name": "chatInput",
+              "value": "Prépare une synthèse finale pour le projet. Utilise les briques du Jour 4 pour qualifier l'écart, les briques du Jour 2 pour sourcer le constat, puis rédige un brouillon du Jour 5 à faire valider humainement.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-input",
+      "name": "Entrée de scénario",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        380,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7-expected",
+              "name": "montant_urssaf_attendu",
+              "value": "={{ Math.round(Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0) * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "d7-gap",
+              "name": "ecart_urssaf",
+              "value": "={{ Math.round((Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) * 100) / 100 }}",
+              "type": "number"
+            },
+            {
+              "id": "d7-control-status",
+              "name": "statut_controle_j4",
+              "value": "={{ Math.abs(Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) > 0.01 ? 'ecart_detecte' : 'conforme' }}",
+              "type": "string"
+            },
+            {
+              "id": "d7-exception-note",
+              "name": "resume_exception_j4",
+              "value": "={{ 'Exception ' + $json.exception_id + ' avec ecart URSSAF de ' + (Math.round((Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) * 100) / 100) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-day4-logic",
+      "name": "Logique d'exceptions J4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7-source-title",
+              "name": "source_title",
+              "value": "Note documentaire sourcée du Jour 2",
+              "type": "string"
+            },
+            {
+              "id": "d7-source-ref",
+              "name": "source_reference",
+              "value": "URSSAF-CTRL-002",
+              "type": "string"
+            },
+            {
+              "id": "d7-source-excerpt",
+              "name": "source_excerpt",
+              "value": "La règle documentaire attendue relie le montant observé à la base déclarée et au taux applicable, avec justification des écarts par preuve conservée.",
+              "type": "string"
+            },
+            {
+              "id": "d7-source-note",
+              "name": "preuve_documentaire_j2",
+              "value": "Cette brique représente le sourcing du Jour 2 sans relancer de corpus ni de RAG.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-day2-sourcing",
+      "name": "Sourcing J2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        940,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7-prep-input",
+              "name": "chatInput",
+              "value": "=Agent rédacteur : assemble les briques validées du projet final.\n\nException: {{ $json.exception_id }}\nControle J4: {{ $json.resume_exception_j4 }}\nSourcing J2: {{ $json.source_reference }} - {{ $json.source_excerpt }}\n\nRédige un brouillon bref avec: constat, source, limite, statut de validation humaine requis.",
+              "type": "string"
+            },
+            {
+              "id": "d7-prep-system",
+              "name": "systemMessage",
+              "value": "Tu es l'agent rédacteur du projet final. Tu n'ajoutes aucun fait nouveau, tu ne lances aucune indexation et tu ne fais que synthétiser les briques déjà préparées. Réponds en français avec un brouillon court, les sources et les limites.",
+              "type": "string"
+            },
+            {
+              "id": "d7-prep-flag",
+              "name": "validation_humaine_requise",
+              "value": "true",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-prepare-synthesis",
+      "name": "Préparer synthèse J5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1220,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "={{ $json.systemMessage }}"
+        }
+      },
+      "id": "d7-agent-redacteur",
+      "name": "Agent rédacteur",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1500,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-nano",
+          "mode": "id"
+        },
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "d7-openai",
+      "name": "OpenAI Gateway",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1500,
+        640
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "llBbatZjnM6zdCyD",
+          "name": "OpenAI Liora Gateway"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "form",
+        "formTitle": "Validation humaine — Jour 7",
+        "formDescription": "Validez ou rejetez le brouillon final issu des briques J4, J2 et J5. Aucun reindexage ni infrastructure ne doit intervenir ici.",
+        "formFields": {
+          "values": [
+            {
+              "fieldType": "dropdown",
+              "fieldLabel": "Décision",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "Valider"
+                  },
+                  {
+                    "option": "Rejeter"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldType": "textarea",
+              "fieldLabel": "Commentaire",
+              "requiredField": false
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-validation",
+      "name": "Validation humaine",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1780,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d7-decision",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json[\"Décision\"] }}",
+              "rightValue": "Valider"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-if-decision",
+      "name": "Décision validée ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2020,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7-ok-status",
+              "name": "statut",
+              "value": "projet_final_valide",
+              "type": "string"
+            },
+            {
+              "id": "d7-ok-report",
+              "name": "rapport_final",
+              "value": "={{ $('Agent rédacteur').item.json.output ?? $('Agent rédacteur').item.json.text ?? $('Agent rédacteur').item.json }}",
+              "type": "string"
+            },
+            {
+              "id": "d7-ok-comment",
+              "name": "commentaire_humain",
+              "value": "={{ $json[\"Commentaire\"] ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-valid",
+      "name": "Projet validé",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2260,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d7-ko-status",
+              "name": "statut",
+              "value": "projet_final_rejete",
+              "type": "string"
+            },
+            {
+              "id": "d7-ko-report",
+              "name": "rapport_brouillon",
+              "value": "={{ $('Agent rédacteur').item.json.output ?? $('Agent rédacteur').item.json.text ?? $('Agent rédacteur').item.json }}",
+              "type": "string"
+            },
+            {
+              "id": "d7-ko-comment",
+              "name": "motif_rejet",
+              "value": "={{ $json[\"Commentaire\"] ?? 'Motif non renseigné' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d7-rejected",
+      "name": "Projet rejeté",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2260,
+        520
+      ]
+    }
+  ],
+  "connections": {
+    "Déclencheur Manuel": {
+      "main": [
+        [
+          {
+            "node": "Entrée de scénario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrée de scénario": {
+      "main": [
+        [
+          {
+            "node": "Logique d'exceptions J4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Logique d'exceptions J4": {
+      "main": [
+        [
+          {
+            "node": "Sourcing J2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sourcing J2": {
+      "main": [
+        [
+          {
+            "node": "Préparer synthèse J5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer synthèse J5": {
+      "main": [
+        [
+          {
+            "node": "Agent rédacteur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agent rédacteur": {
+      "main": [
+        [
+          {
+            "node": "Validation humaine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation humaine": {
+      "main": [
+        [
+          {
+            "node": "Décision validée ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Décision validée ?": {
+      "main": [
+        [
+          {
+            "node": "Projet validé",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Projet rejeté",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Gateway": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Agent rédacteur",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "description": "Jour 7 - Projet final: assemblage minimal des briques J4, J2 et J5 sans reindexation ni initialisation d'infrastructure."
+  }
+}

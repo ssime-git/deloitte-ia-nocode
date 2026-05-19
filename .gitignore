@@ -1,0 +1,8 @@
+.env
+.skills/
+.mcp.json
+__pycache__/
+*.pyc
+docs/superpowers/
+.pi-lens/
+.ruff_cache/
