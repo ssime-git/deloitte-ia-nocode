@@ -50,6 +50,12 @@
               "name": "chatInput",
               "value": "Analyse cette clause fictive : une prime annuelle variable est calculée sur la rémunération brute avec validation manuelle finale. Retourne une lecture métier, les risques et les questions de contrôle.",
               "type": "string"
+            },
+            {
+              "id": "day1-manual-niveau",
+              "name": "niveau_sensibilite",
+              "value": "Moyen",
+              "type": "string"
             }
           ]
         },
@@ -173,12 +179,12 @@
       "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": true
+            "caseSensitive": false
           },
           "conditions": [
             {
               "id": "day1-if-valid",
-              "leftValue": "={{ ['Faible', 'Moyen', 'Eleve'].includes($json.niveau_sensibilite) }}",
+              "leftValue": "={{ ['faible','moyen','eleve'].includes((($json.niveau_sensibilite||'').toString().toLowerCase())) }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
