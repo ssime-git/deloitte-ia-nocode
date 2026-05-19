@@ -177,14 +177,40 @@
     },
     {
       "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day1-normalized-sensitivity",
+              "name": "niveau_sensibilite",
+              "value": "={{ (() => { const raw = (($json.niveau_sensibilite || '').toString().trim().toLowerCase()); if (raw === 'faible') return 'Faible'; if (raw === 'moyen') return 'Moyen'; if (raw === 'eleve' || raw === 'élevé') return 'Eleve'; return 'Moyen'; })() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "includeOtherFields": true
+        }
+      },
+      "id": "day1-normalize-sensitivity",
+      "name": "Normaliser sensibilité",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1060,
+        360
+      ]
+    },
+    {
+      "parameters": {
         "conditions": {
           "options": {
-            "caseSensitive": false
+            "caseSensitive": true
           },
           "conditions": [
             {
               "id": "day1-if-valid",
-              "leftValue": "={{ ['faible','moyen','eleve'].includes((($json.niveau_sensibilite||'').toString().toLowerCase())) }}",
+              "leftValue": "={{ ['Faible','Moyen','Eleve'].includes($json.niveau_sensibilite) }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -311,6 +337,17 @@
       ]
     },
     "Analyser clause": {
+      "main": [
+        [
+          {
+            "node": "Normaliser sensibilité",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normaliser sensibilité": {
       "main": [
         [
           {
