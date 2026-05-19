@@ -27,6 +27,7 @@ http://localhost:5678
 ```
 
 Notes rapides :
+
 - Si vous n'utilisez pas d'import API (clé N8N_API_KEY vide), le bootstrap termine proprement sans importer — les workflows peuvent être importés plus tard via `make preload` après avoir configuré N8N_API_KEY.
 - Pour relancer l'environnement entièrement (clean start) :
 
@@ -60,7 +61,7 @@ Comme ce dépôt est un runtime self-hosted de formation, la pile active aussi `
 - `make up-rag` : ajoute `qdrant` pour les exercices RAG
 - `make up-mcp` : ajoute le profil `mcp-server` pour les exercices MCP
 
-Dans ce Task 1, `mcp-server` est un placeholder exécutable avec endpoint `/health` pour garder le profil `mcp` runnable sans embarquer encore les outils métier des tâches suivantes.
+Le profil `mcp-server` fournit le plus petit slice utile pour le Jour 6 : un service exécutable, relançable, et borné à des outils pédagogiques de démonstration plutôt qu'à une infrastructure métier complète.
 
 Adminer n'est pas inclus dans ce dépôt.
 
