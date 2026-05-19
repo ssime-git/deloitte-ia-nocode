@@ -6,15 +6,11 @@ Ce document couvre uniquement l'exploitation minimale du repo pour faire tourner
 
 ## Demarrage initial
 
-Bootstrap initial :
+Quickstart from-scratch :
 
 ```bash
 cp .env.example .env
-```
-
-Une fois `.env` present, le demarrage nominal se fait en une commande :
-
-```bash
+# edit .env to set POSTGRES_PASSWORD and N8N_ENCRYPTION_KEY
 make setup
 ```
 
@@ -23,6 +19,17 @@ Effet attendu :
 - `postgres` et `n8n` démarrent
 - le bootstrap `n8n-bootstrap` tente le préchargement
 - si `N8N_API_KEY` est encore vide, la pile démarre quand même et le préchargement est simplement ignoré
+
+Validation rapide :
+
+```bash
+# verify containers are running
+make ps
+# tails logs to ensure n8n healthy
+make logs
+# run preload manually if needed after creating N8N_API_KEY
+make preload
+```
 
 Pour les journées qui ont besoin d'un service optionnel :
 

@@ -4,14 +4,38 @@ Socle minimal pour la formation no-code d'audit paie/DSN. La surface apprenante 
 
 J1 et J2 sont explicitement `chat-first` : le dépôt prépare ce runtime, mais l'entrée pédagogique initiale reste la conversation et la conception de prompts dans n8n.
 
-## Démarrage rapide
+## Démarrage rapide (from-scratch)
+
+1. Copier l'exemple d'environnement et vérifier les variables essentielles :
 
 ```bash
 cp .env.example .env
+# Edit .env and set POSTGRES_PASSWORD and N8N_ENCRYPTION_KEY
+```
+
+2. Démarrer la pile minimale et importer les workflows :
+
+```bash
+# démarre postgres + n8n, puis exécute le preload
 make setup
 ```
 
-Ouvrir ensuite `http://localhost:5678`.
+3. Ouvrir l'interface n8n :
+
+```text
+http://localhost:5678
+```
+
+Notes rapides :
+- Si vous n'utilisez pas d'import API (clé N8N_API_KEY vide), le bootstrap termine proprement sans importer — les workflows peuvent être importés plus tard via `make preload` après avoir configuré N8N_API_KEY.
+- Pour relancer l'environnement entièrement (clean start) :
+
+```bash
+# supprime volumes postgres/n8n et redémarre (attention perte de données)
+make reset-n8n
+# puis re-run preload si nécessaire
+make preload
+```
 
 ## Variables d'environnement
 
