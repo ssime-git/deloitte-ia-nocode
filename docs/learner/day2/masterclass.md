@@ -29,13 +29,14 @@ Autrement dit, la journée ne cherche pas à transformer les apprenants en exper
 
 Vous allez travailler sur `Jour 2 - Fiabilité et RAG`.
 
-Le flux attendu reste léger :
+Le flux attendu reste léger mais compare deux comportements utiles :
 
 - une question métier posée via chat
-- un accès à un corpus déjà préparé par le formateur
-- une réponse courte avec source ou refus explicite
+- une branche de réponse libre, plausible mais non sourcée
+- une branche de réponse sourcée sur corpus déjà préparé par le formateur
+- une synthèse comparative qui aide à juger la fiabilité réelle de la réponse
 
-La partie indexation ou infrastructure reste hors du parcours apprenant. Le focus porte sur la qualité du questionnement et sur l'évaluation de la réponse.
+La partie indexation ou infrastructure reste hors du parcours apprenant. Le focus porte sur la qualité du questionnement, sur la comparaison libre vs sourcé, et sur l'évaluation de la réponse.
 
 ## 5. Comment lire une réponse fiable
 

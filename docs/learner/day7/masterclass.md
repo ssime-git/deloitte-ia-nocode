@@ -32,6 +32,8 @@ Chaque brique doit garder son rôle. L'intégration n'efface pas la méthode app
 
 Le projet final est donc un exercice d'intégration de briques validées, pas une reconstruction complète depuis zéro.
 
+Le bon niveau de complexité n'est pas une juxtaposition artificielle de nœuds `Set`, mais un assemblage réel : une qualification d'exception, un sourcing documentaire effectif, une synthèse générative bornée, puis une validation humaine.
+
 ## 4. Ce qui est obligatoire et ce qui est optionnel
 
 Socle obligatoire :
@@ -60,7 +62,7 @@ Le flux final doit rester crédible pour un public métier :
 - synthèse ou commentaire
 - validation humaine
 
-Le workflow ne doit pas dépendre d'étapes cachées de réindexation ou d'initialisation manuelle hors session.
+Le workflow ne doit pas dépendre d'étapes cachées de réindexation ou d'initialisation manuelle hors session. Il peut en revanche réutiliser un corpus et des services déjà préparés par le formateur, tant que cela reste explicite et relançable.
 
 ## 6. Critères de réussite
 

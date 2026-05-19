@@ -2,7 +2,7 @@
 
 ## Ce que vous allez construire
 
-Un workflow orienté chat qui pose une question métier, récupère une réponse, puis affiche clairement si cette réponse est sourcée ou non.
+Un workflow orienté chat qui pose une question métier, produit une réponse libre, produit une réponse sourcée, puis affiche clairement la différence de fiabilité entre les deux.
 
 Le support DSN-like reste ici un cas d'exercice. Le lab porte sur la fiabilité d'une réponse et sur sa justification par les sources.
 
@@ -39,7 +39,7 @@ Ajoutez une première branche qui envoie la question au modèle sans source supp
 
 ### Étape 3 — Créer la branche "réponse sourcée"
 
-Ajoutez une deuxième branche qui enrichit la question avec un accès au corpus déjà préparé. La sortie doit inclure au moins :
+Ajoutez une deuxième branche qui enrichit la question avec un accès au corpus déjà préparé. Cette branche doit orienter la recherche vers les bons mots-clés ou identifiants de règles lorsque le cas s'y prête. La sortie doit inclure au moins :
 
 - une réponse synthétique
 - une ou plusieurs références
@@ -80,6 +80,7 @@ Une vue finale qui permet de comparer :
 
 - ce que le modèle dit seul
 - ce qu'il dit avec une source
+- quelles règles ou preuves sont réellement citées
 - ce qui reste incertain malgré le support documentaire
 
 ## Si quelque chose ne fonctionne pas

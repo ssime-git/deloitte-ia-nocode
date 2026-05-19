@@ -3,9 +3,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Jour 2 - Fiabilite et RAG\n\nFlux réduit:\n1. Chat Trigger\n2. Question documentaire\n3. Retriever Qdrant\n4. Vector Store Retriever\n5. Question and Answer Chain\n6. Synthese sourcée\n\nLe corpus est déjà préparé par le formateur: le workflow ne refait pas l'indexation, il interroge la collection autorisée et impose des citations.",
-        "height": 260,
-        "width": 600,
+        "content": "## Jour 2 - Fiabilité et RAG\n\nFlux comparatif :\n1. Chat Trigger ou Déclencheur Manuel\n2. Question documentaire\n3. Réponse libre (sans source)\n4. Préparer recherche sourcée\n5. Retriever Qdrant + QA Chain\n6. Synthèse comparative\n\nLe corpus est déjà préparé par le formateur. Le workflow compare une réponse plausible avec une réponse sourcée et bornée.",
+        "height": 280,
+        "width": 620,
         "color": 5
       },
       "id": "day2-note-overview",
@@ -48,7 +48,7 @@
             {
               "id": "day2-manual-input",
               "name": "chatInput",
-              "value": "Quelle règle pédagogique explique qu'un écart URSSAF trop important doit devenir une exception d'audit ? Cite la règle et la limite de la réponse.",
+              "value": "Dans le corpus, quelle règle décrit qu'un écart de plus de 5% entre base_urssaf et salaire_brut devient une exception d'audit ? Cite l'identifiant de règle, la preuve attendue et la limite de la réponse.",
               "type": "string"
             }
           ]
@@ -76,15 +76,27 @@
               "type": "string"
             },
             {
-              "id": "day2-hint",
-              "name": "source_hint",
-              "value": "Corpus pedagogique RH/paie deja prepare, collection dsn_rh_paie_corpus_v1.",
+              "id": "day2-question-free",
+              "name": "question_libre",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-question-rag",
+              "name": "question_sourcee",
+              "value": "={{ (() => { const q = ($json.chatInput || '').toString(); const l = q.toLowerCase(); if (l.includes('urssaf') && (l.includes('5%') || l.includes('salaire_brut') || l.includes('base_urssaf'))) return q + ' Source IDs prioritaires: URSSAF-CTRL-001, AUDIT-EVIDENCE-001. Mots-clés: base_urssaf, salaire_brut, écart 5 pourcent, audit exception, preuve attendue.'; if (l.includes('urssaf') && (l.includes('montant') || l.includes('taux'))) return q + ' Source IDs prioritaires: URSSAF-CTRL-002, AUDIT-EVIDENCE-001. Mots-clés: montant_urssaf, base_urssaf, taux_urssaf, montant attendu, preuve attendue.'; if (l.includes('sortie') || l.includes('actif')) return q + ' Source ID prioritaire: CTRL-008 / EXC_EXITED_EMPLOYEE_ACTIVE. Mots-clés: date_sortie, statut_paie, ACTIF, audit exception, preuve.'; return q + ' Source IDs utiles: URSSAF-CTRL-001, URSSAF-CTRL-002, AUDIT-EVIDENCE-001, CTRL-008. Cite la règle et la preuve attendue si elles sont trouvées.'; })() }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-source-hint",
+              "name": "source_ids_hint",
+              "value": "URSSAF-CTRL-001, URSSAF-CTRL-002, AUDIT-EVIDENCE-001, CTRL-008",
               "type": "string"
             },
             {
               "id": "day2-format",
               "name": "format_attendu",
-              "value": "Reponse courte, citations des sources retrouvees, niveau de confiance et limites.",
+              "value": "Réponse courte, citations des sources retrouvées, niveau de confiance et limites.",
               "type": "string"
             }
           ]
@@ -98,6 +110,94 @@
       "position": [
         520,
         380
+      ]
+    },
+    {
+      "parameters": {
+        "prompt": {
+          "values": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "={{ $json.question_libre }}"
+            }
+          ]
+        },
+        "options": {
+          "systemMessage": "Tu réponds sans accès à une source documentaire externe. Réponds en français, de façon prudente et concise. N'invente pas d'identifiant de règle ou de preuve documentaire. Si tu n'es pas sûr, dis explicitement que la réponse est plausible mais non sourcée."
+        }
+      },
+      "id": "day2-free-answer",
+      "name": "Réponse libre",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.4,
+      "position": [
+        820,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day2-prepare-q",
+              "name": "question_sourcee",
+              "value": "={{ $('Question documentaire').item.json.question_sourcee }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-prepare-chatinput",
+              "name": "chatInput",
+              "value": "={{ $('Question documentaire').item.json.question_sourcee }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-prepare-original",
+              "name": "question_initiale",
+              "value": "={{ $('Question documentaire').item.json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-prepare-sources",
+              "name": "source_ids_hint",
+              "value": "={{ $('Question documentaire').item.json.source_ids_hint }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-prepare-free",
+              "name": "reponse_libre",
+              "value": "={{ $json.text ?? $json.output ?? $json.response ?? $json }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day2-prepare-rag-node",
+      "name": "Préparer recherche sourcée",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        820,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "query": "={{ $json.question_sourcee }}",
+        "options": {
+          "systemPromptTemplate": "Tu es un assistant documentaire pour audit paie/RH. Utilise uniquement le contexte récupéré ci-dessous.\n----------------\nContexte retrouvé: {context}\n----------------\nRègles de réponse :\n- Si la question mentionne un écart > 5% entre base_urssaf et salaire_brut, cherche en priorité `URSSAF-CTRL-001`.\n- Si la question mentionne un montant URSSAF observé vs montant attendu, cherche en priorité `URSSAF-CTRL-002`.\n- Si la question mentionne une preuve attendue pour une exception, cherche aussi `AUDIT-EVIDENCE-001`.\n- Si la question mentionne date de sortie et statut ACTIF, cherche la règle de type `CTRL-008` ou la note sorties/statut.\n- Cite les identifiants de règles réellement présents dans le contexte.\n- Réponds en français avec : réponse courte, citations, niveau de confiance, limites.\n- Si la source est insuffisante, dis-le explicitement et n'invente rien."
+        },
+        "promptType": "auto"
+      },
+      "id": "day2-qa",
+      "name": "Question and Answer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.7,
+      "position": [
+        1120,
+        460
       ]
     },
     {
@@ -118,8 +218,8 @@
       "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
       "typeVersion": 1.3,
       "position": [
-        820,
-        620
+        1120,
+        760
       ],
       "credentials": {
         "qdrantApi": {
@@ -127,6 +227,19 @@
           "name": "Qdrant Formation"
         }
       }
+    },
+    {
+      "parameters": {
+        "topK": 8
+      },
+      "id": "day2-vector-store-retriever",
+      "name": "Vector Store Retriever",
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        920
+      ]
     },
     {
       "parameters": {
@@ -140,8 +253,8 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
       "typeVersion": 1.2,
       "position": [
-        820,
-        1040
+        1120,
+        1080
       ],
       "credentials": {
         "openAiApi": {
@@ -149,36 +262,6 @@
           "name": "OpenAI Liora Gateway"
         }
       }
-    },
-    {
-      "parameters": {
-        "topK": 6
-      },
-      "id": "day2-vector-store-retriever",
-      "name": "Vector Store Retriever",
-      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
-      "typeVersion": 1,
-      "position": [
-        820,
-        840
-      ]
-    },
-    {
-      "parameters": {
-        "query": "={{ $json.chatInput }}",
-        "options": {
-          "systemPromptTemplate": "Tu es un assistant documentaire pour audit paie/RH. Utilise uniquement le contexte récupéré ci-dessous.\n----------------\nContexte retrouve: {context}\n----------------\nRegles de reponse:\n- Cite les identifiants de regles et les preuves attendues presentes dans le contexte.\n- Reponds en francais avec une reponse courte, une ou plusieurs citations, un niveau de confiance et des limites.\n- Si la source est insuffisante, dis-le explicitement et n'invente rien."
-        },
-        "promptType": "auto"
-      },
-      "id": "day2-qa",
-      "name": "Question and Answer Chain",
-      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
-      "typeVersion": 1.7,
-      "position": [
-        1080,
-        380
-      ]
     },
     {
       "parameters": {
@@ -196,8 +279,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        1080,
-        620
+        820,
+        760
       ],
       "credentials": {
         "openAiApi": {
@@ -212,21 +295,39 @@
         "assignments": {
           "assignments": [
             {
-              "id": "day2-answer",
-              "name": "reponse_sourcée",
+              "id": "day2-final-question",
+              "name": "question_initiale",
+              "value": "={{ $('Préparer recherche sourcée').item.json.question_initiale }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-final-free",
+              "name": "reponse_libre",
+              "value": "={{ $('Préparer recherche sourcée').item.json.reponse_libre }}",
+              "type": "string"
+            },
+            {
+              "id": "day2-final-sourced",
+              "name": "reponse_sourcee",
               "value": "={{ $json.response ?? $json.text ?? $json.output ?? $json }}",
               "type": "string"
             },
             {
-              "id": "day2-method",
-              "name": "methode_rag",
-              "value": "Chat Trigger -> Set -> Qdrant Retriever -> Vector Store Retriever -> Question and Answer Chain",
+              "id": "day2-final-sources-hint",
+              "name": "sources_attendues",
+              "value": "={{ $('Préparer recherche sourcée').item.json.source_ids_hint }}",
               "type": "string"
             },
             {
-              "id": "day2-limits",
-              "name": "limites",
-              "value": "Refuser si la source est insuffisante et verifier que les citations proviennent bien du corpus.",
+              "id": "day2-final-comment",
+              "name": "comparaison_fiabilite",
+              "value": "La réponse sourcée doit être préférée si elle cite réellement une règle du corpus ou refuse explicitement d’inventer.",
+              "type": "string"
+            },
+            {
+              "id": "day2-final-method",
+              "name": "methode_rag",
+              "value": "Question documentaire -> Réponse libre -> Retriever Qdrant -> Vector Store Retriever -> Question and Answer Chain -> Synthèse comparative",
               "type": "string"
             }
           ]
@@ -234,12 +335,12 @@
         "options": {}
       },
       "id": "day2-output",
-      "name": "Synthese sourcée",
+      "name": "Synthèse comparative",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1340,
-        380
+        1400,
+        460
       ]
     }
   ],
@@ -281,6 +382,28 @@
       "main": [
         [
           {
+            "node": "Réponse libre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Réponse libre": {
+      "main": [
+        [
+          {
+            "node": "Préparer recherche sourcée",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Préparer recherche sourcée": {
+      "main": [
+        [
+          {
             "node": "Question and Answer Chain",
             "type": "main",
             "index": 0
@@ -292,7 +415,7 @@
       "main": [
         [
           {
-            "node": "Synthese sourcée",
+            "node": "Synthèse comparative",
             "type": "main",
             "index": 0
           }
@@ -336,6 +459,11 @@
       "ai_languageModel": [
         [
           {
+            "node": "Réponse libre",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
             "node": "Question and Answer Chain",
             "type": "ai_languageModel",
             "index": 0
@@ -348,6 +476,6 @@
     "executionOrder": "v1"
   },
   "meta": {
-    "description": "Jour 2 - Fiabilite et RAG: chat-first, corpus deja prepare, retrieval Qdrant autorise et reponse courte avec citations et limites."
+    "description": "Jour 2 - Fiabilité et RAG: comparaison entre réponse libre et réponse sourcée sur corpus Qdrant déjà prêt, avec citations, confiance et limites."
   }
 }

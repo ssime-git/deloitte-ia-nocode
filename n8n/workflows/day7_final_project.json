@@ -3,9 +3,9 @@
   "nodes": [
     {
       "parameters": {
-        "content": "## Jour 7 - Projet final\n\nFlux minimal d'assemblage:\n1. Entrée de scénario\n2. Logique d'exceptions J4\n3. Sourcing J2\n4. Synthèse J5\n5. Validation humaine\n6. Branche validée ou rejetée\n\nAucune réindexation, aucune initialisation d'infrastructure: le workflow assemble seulement des briques déjà validées.",
-        "height": 280,
-        "width": 650,
+        "content": "## Jour 7 - Projet final\n\nFlux d'assemblage réel :\n1. Entrée de scénario\n2. Qualification de l'exception (brique J4)\n3. Préparer question documentaire\n4. Récupérer la règle/source (brique J2)\n5. Agent rédacteur\n6. Validation humaine\n7. Branche validée ou rejetée\n\nLe workflow réutilise des briques réelles déjà comprises. Il n'indexe pas le corpus et n'expose pas d'infrastructure cachée aux apprenants.",
+        "height": 300,
+        "width": 700,
         "color": 5
       },
       "id": "d7-note-overview",
@@ -40,33 +40,39 @@
               "type": "string"
             },
             {
+              "id": "d7-row-id",
+              "name": "row_id",
+              "value": "ROW-0008",
+              "type": "string"
+            },
+            {
               "id": "d7-base",
               "name": "base_urssaf",
-              "value": "1200",
+              "value": 4000,
               "type": "number"
             },
             {
               "id": "d7-rate",
               "name": "taux_urssaf",
-              "value": "0.22",
+              "value": 0.1,
               "type": "number"
             },
             {
               "id": "d7-observed",
               "name": "montant_urssaf_observe",
-              "value": "301",
+              "value": 100,
               "type": "number"
             },
             {
               "id": "d7-source-id",
-              "name": "source_id",
+              "name": "source_id_cible",
               "value": "URSSAF-CTRL-002",
               "type": "string"
             },
             {
-              "id": "d7-chat-input",
+              "id": "d7-scenario",
               "name": "chatInput",
-              "value": "Prépare une synthèse finale pour le projet. Utilise les briques du Jour 4 pour qualifier l'écart, les briques du Jour 2 pour sourcer le constat, puis rédige un brouillon du Jour 5 à faire valider humainement.",
+              "value": "À partir d'une exception URSSAF, produis un brouillon de synthèse d'audit avec règle citée, limite explicite et validation humaine finale.",
               "type": "string"
             }
           ]
@@ -78,7 +84,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        380,
+        360,
         420
       ]
     },
@@ -103,13 +109,19 @@
             {
               "id": "d7-control-status",
               "name": "statut_controle_j4",
-              "value": "={{ Math.abs(Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) > 0.01 ? 'ecart_detecte' : 'conforme' }}",
+              "value": "={{ Math.abs(Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) > 0.02 ? 'exception' : 'conforme' }}",
               "type": "string"
             },
             {
-              "id": "d7-exception-note",
+              "id": "d7-proof",
+              "name": "preuve_j4",
+              "value": "={{ 'Ligne ' + $json.row_id + ' : montant URSSAF observé ' + $json.montant_urssaf_observe + ', attendu ' + (Math.round(Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0) * 100) / 100) + ', écart ' + (Math.round((Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) * 100) / 100) }}",
+              "type": "string"
+            },
+            {
+              "id": "d7-summary-j4",
               "name": "resume_exception_j4",
-              "value": "={{ 'Exception ' + $json.exception_id + ' avec ecart URSSAF de ' + (Math.round((Number($json.montant_urssaf_observe || 0) - (Number($json.base_urssaf || 0) * Number($json.taux_urssaf || 0))) * 100) / 100) }}",
+              "value": "={{ 'Exception ' + $json.exception_id + ' (' + $json.statut_controle_j4 + ') sur ' + $json.row_id }}",
               "type": "string"
             }
           ]
@@ -121,7 +133,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        660,
+        680,
         420
       ]
     },
@@ -132,41 +144,115 @@
         "assignments": {
           "assignments": [
             {
-              "id": "d7-source-title",
-              "name": "source_title",
-              "value": "Note documentaire sourcée du Jour 2",
+              "id": "d7-doc-question",
+              "name": "question_documentaire",
+              "value": "Quelle règle du corpus RH/paie décrit un écart entre montant URSSAF observé et montant attendu calculé comme base_urssaf * taux_urssaf ? Quelles preuves conserver pour justifier cet écart ? Cite la règle et les limites.",
               "type": "string"
             },
             {
-              "id": "d7-source-ref",
-              "name": "source_reference",
-              "value": "URSSAF-CTRL-002",
+              "id": "d7-doc-chatinput",
+              "name": "chatInput",
+              "value": "Quelle règle du corpus RH/paie décrit un écart entre montant URSSAF observé et montant attendu calculé comme base_urssaf * taux_urssaf ? Quelles preuves conserver pour justifier cet écart ? Source IDs prioritaires: URSSAF-CTRL-002, AUDIT-EVIDENCE-001. Mots-clés: montant_urssaf, base_urssaf, taux_urssaf, preuve attendue, audit exception.",
               "type": "string"
             },
             {
-              "id": "d7-source-excerpt",
-              "name": "source_excerpt",
-              "value": "La règle documentaire attendue relie le montant observé à la base déclarée et au taux applicable, avec justification des écarts par preuve conservée.",
-              "type": "string"
-            },
-            {
-              "id": "d7-source-note",
-              "name": "preuve_documentaire_j2",
-              "value": "Cette brique représente le sourcing du Jour 2 sans relancer de corpus ni de RAG.",
+              "id": "d7-doc-query",
+              "name": "question_sourcee",
+              "value": "Quelle règle du corpus RH/paie décrit un écart entre montant URSSAF observé et montant attendu calculé comme base_urssaf * taux_urssaf ? Quelles preuves conserver pour justifier cet écart ? Source IDs prioritaires: URSSAF-CTRL-002, AUDIT-EVIDENCE-001. Mots-clés: montant_urssaf, base_urssaf, taux_urssaf, preuve attendue, audit exception.",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "d7-day2-sourcing",
-      "name": "Sourcing J2",
+      "id": "d7-prepare-sourcing",
+      "name": "Préparer sourcing J2",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        940,
+        980,
         420
       ]
+    },
+    {
+      "parameters": {
+        "query": "={{ $json.question_sourcee }}",
+        "options": {
+          "systemPromptTemplate": "Tu es un assistant documentaire pour audit paie/RH. Utilise uniquement le contexte récupéré ci-dessous.\n----------------\nContexte retrouvé: {context}\n----------------\nRègles de réponse :\n- Cherche en priorité `URSSAF-CTRL-002` pour les écarts entre montant observé et montant attendu.\n- Cherche aussi `AUDIT-EVIDENCE-001` pour la preuve attendue.\n- Cite uniquement les identifiants réellement trouvés dans le contexte.\n- Réponds en français avec : réponse courte, citations, niveau de confiance, limites.\n- Si la source est insuffisante, dis-le explicitement et n'invente rien."
+        },
+        "promptType": "auto"
+      },
+      "id": "d7-qa",
+      "name": "Question and Answer Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainRetrievalQa",
+      "typeVersion": 1.7,
+      "position": [
+        1280,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve",
+        "qdrantCollection": {
+          "__rl": true,
+          "value": "dsn_rh_paie_corpus_v1",
+          "mode": "id"
+        },
+        "options": {
+          "contentPayloadKey": "content",
+          "metadataPayloadKey": "metadata"
+        }
+      },
+      "id": "d7-qdrant-retriever",
+      "name": "Retriever Qdrant",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreQdrant",
+      "typeVersion": 1.3,
+      "position": [
+        1280,
+        720
+      ],
+      "credentials": {
+        "qdrantApi": {
+          "id": "qdrantFormation",
+          "name": "Qdrant Formation"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "topK": 8
+      },
+      "id": "d7-vector-store-retriever",
+      "name": "Vector Store Retriever",
+      "type": "@n8n/n8n-nodes-langchain.retrieverVectorStore",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        880
+      ]
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {
+          "baseURL": "={{ $env.OPENAI_GATEWAY_BASE_URL || 'https://api.openai.com/v1' }}"
+        }
+      },
+      "id": "d7-embeddings",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        1040
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "llBbatZjnM6zdCyD",
+          "name": "OpenAI Liora Gateway"
+        }
+      }
     },
     {
       "parameters": {
@@ -175,33 +261,33 @@
         "assignments": {
           "assignments": [
             {
-              "id": "d7-prep-input",
+              "id": "d7-source-answer",
+              "name": "reponse_sourcee_j2",
+              "value": "={{ $json.response ?? $json.text ?? $json.output ?? $json }}",
+              "type": "string"
+            },
+            {
+              "id": "d7-agent-input",
               "name": "chatInput",
-              "value": "=Agent rédacteur : assemble les briques validées du projet final.\n\nException: {{ $json.exception_id }}\nControle J4: {{ $json.resume_exception_j4 }}\nSourcing J2: {{ $json.source_reference }} - {{ $json.source_excerpt }}\n\nRédige un brouillon bref avec: constat, source, limite, statut de validation humaine requis.",
+              "value": "=Agent rédacteur : assemble les briques validées du projet final.\n\nException : {{ $json.exception_id }}\nContrôle J4 : {{ $json.resume_exception_j4 }}\nPreuve J4 : {{ $json.preuve_j4 }}\nSourcing J2 : {{ $json.reponse_sourcee_j2 }}\n\nRédige un brouillon court contenant : constat, impact, règle ou source citée, limite, décision humaine attendue.",
               "type": "string"
             },
             {
-              "id": "d7-prep-system",
+              "id": "d7-agent-system",
               "name": "systemMessage",
-              "value": "Tu es l'agent rédacteur du projet final. Tu n'ajoutes aucun fait nouveau, tu ne lances aucune indexation et tu ne fais que synthétiser les briques déjà préparées. Réponds en français avec un brouillon court, les sources et les limites.",
-              "type": "string"
-            },
-            {
-              "id": "d7-prep-flag",
-              "name": "validation_humaine_requise",
-              "value": "true",
+              "value": "Tu es l'agent rédacteur du projet final. Tu synthétises uniquement les briques déjà préparées : exception, preuve déterministe, réponse sourcée. Tu n'ajoutes aucun fait nouveau et tu explicites les limites. Réponds en français sous forme courte et exploitable par un auditeur paie.",
               "type": "string"
             }
           ]
         },
         "options": {}
       },
-      "id": "d7-prepare-synthesis",
+      "id": "d7-prepare-report",
       "name": "Préparer synthèse J5",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1220,
+        1580,
         420
       ]
     },
@@ -216,7 +302,7 @@
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 1.9,
       "position": [
-        1500,
+        1880,
         420
       ]
     },
@@ -236,8 +322,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.2,
       "position": [
-        1500,
-        640
+        1880,
+        700
       ],
       "credentials": {
         "openAiApi": {
@@ -250,7 +336,7 @@
       "parameters": {
         "resume": "form",
         "formTitle": "Validation humaine — Jour 7",
-        "formDescription": "Validez ou rejetez le brouillon final issu des briques J4, J2 et J5. Aucun reindexage ni infrastructure ne doit intervenir ici.",
+        "formDescription": "Validez ou rejetez le brouillon final issu des briques J4, J2 et J5. Le workflow doit rester relançable sans étape cachée.",
         "formFields": {
           "values": [
             {
@@ -282,7 +368,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1780,
+        2160,
         420
       ]
     },
@@ -315,7 +401,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        2020,
+        2400,
         420
       ]
     },
@@ -351,7 +437,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2260,
+        2640,
         320
       ]
     },
@@ -387,7 +473,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2260,
+        2640,
         520
       ]
     }
@@ -419,19 +505,79 @@
       "main": [
         [
           {
-            "node": "Sourcing J2",
+            "node": "Préparer sourcing J2",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Sourcing J2": {
+    "Préparer sourcing J2": {
+      "main": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Question and Answer Chain": {
       "main": [
         [
           {
             "node": "Préparer synthèse J5",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retriever Qdrant": {
+      "ai_vectorStore": [
+        [
+          {
+            "node": "Vector Store Retriever",
+            "type": "ai_vectorStore",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Retriever Qdrant",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vector Store Retriever": {
+      "ai_retriever": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_retriever",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Gateway": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Question and Answer Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Agent rédacteur",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -487,23 +633,12 @@
           }
         ]
       ]
-    },
-    "OpenAI Gateway": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Agent rédacteur",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "settings": {
     "executionOrder": "v1"
   },
   "meta": {
-    "description": "Jour 7 - Projet final: assemblage minimal des briques J4, J2 et J5 sans reindexation ni initialisation d'infrastructure."
+    "description": "Jour 7 - Projet final: assemblage réel des briques J4, J2 et J5 avec sourcing documentaire, synthèse finale et validation humaine."
   }
 }

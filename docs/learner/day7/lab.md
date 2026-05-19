@@ -49,7 +49,7 @@ Intégrez ou appelez la logique de détection d'exceptions construite en Jour 4.
 
 ### Étape 3 — Réutiliser la brique de sourcing
 
-Ajoutez le composant de réponse sourcée issu du Jour 2 dès que le constat doit être justifié par une source ou une règle documentaire.
+Ajoutez le composant de réponse sourcée issu du Jour 2 dès que le constat doit être justifié par une source ou une règle documentaire. Cette brique doit faire un vrai appel de recherche documentaire, pas seulement injecter une source simulée dans un `Set`.
 
 ### Étape 4 — Réutiliser la brique de synthèse
 
@@ -68,6 +68,7 @@ Préparez une sortie finale lisible pour un public métier :
 
 - le workflow final assemble des briques déjà validées
 - le socle obligatoire Jour 4 + Jour 5 est bien présent
+- la brique de sourcing Jour 2 est réelle dès qu'une justification documentaire est requise
 - aucune étape cachée d'indexation ou d'initialisation n'est nécessaire pendant le lab
 - le groupe peut expliquer ce qui relève du contrôle, de la source et de la synthèse
 - le résultat final passe par une validation humaine
