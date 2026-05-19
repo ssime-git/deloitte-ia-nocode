@@ -25,6 +25,8 @@ Ce lab ne dépend d'aucun fichier métier. Vous travaillez uniquement avec :
 
 Si le workflow a déjà été préchargé, ouvrez-le. Sinon, créez-le avec ce nom exact.
 
+Le lab apprenant utilise le **Chat Trigger**. Un second chemin **Déclencheur Manuel** peut exister dans le workflow pour les tests mainteneur et les démonstrations de vérification ; il ne change pas le parcours attendu côté apprenant.
+
 ## Étapes
 
 ### Étape 1 — Créer l'entrée chat
@@ -57,6 +59,20 @@ Ajoutez un parser ou une validation simple pour vérifier que la sortie respecte
 - la réponse contient les champs attendus
 - une variation du prompt change le fond de la réponse sans casser le format
 - la branche de garde-fou capte un format invalide
+
+## Prompts d'essai
+
+Vous pouvez tester avec des formulations comme :
+
+- `Analyse cette clause fictive : une prime annuelle variable est calculée sur la rémunération brute avec validation manuelle finale. Retourne une lecture métier, les risques et les questions de contrôle.`
+- `Résume les risques d'audit d'une clause de prime sur objectifs sans citer de personne réelle et en gardant un format JSON strict.`
+- `Tu es auditeur paie : lis cette clause fictive et propose 3 questions de contrôle prioritaires avant validation.`
+
+Faites varier ensuite :
+
+- le niveau de précision métier demandé
+- le ton (`factuel`, `prudent`, `synthétique`)
+- la structure attendue (`3 risques`, `5 questions`, `niveau de sensibilité`)
 
 ## Sortie attendue
 

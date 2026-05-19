@@ -25,9 +25,44 @@
       "typeVersion": 1,
       "position": [
         260,
-        360
+        300
       ],
       "webhookId": "f0f6f02b-6ad1-4dd6-8c0f-7f4dc2e07d11"
+    },
+    {
+      "parameters": {},
+      "id": "day1-manual-trigger",
+      "name": "Déclencheur Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day1-manual-input",
+              "name": "chatInput",
+              "value": "Analyse cette clause fictive : une prime annuelle variable est calculée sur la rémunération brute avec validation manuelle finale. Retourne une lecture métier, les risques et les questions de contrôle.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day1-manual-input-node",
+      "name": "Entrée de test mainteneur",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        500
+      ]
     },
     {
       "parameters": {
@@ -226,6 +261,28 @@
   ],
   "connections": {
     "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Contexte d'audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Déclencheur Manuel": {
+      "main": [
+        [
+          {
+            "node": "Entrée de test mainteneur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrée de test mainteneur": {
       "main": [
         [
           {

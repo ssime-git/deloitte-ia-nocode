@@ -25,9 +25,44 @@
       "typeVersion": 1,
       "position": [
         260,
-        380
+        320
       ],
       "webhookId": "ab8adf8f-06b0-4f71-8dd3-410e7f29f3b3"
+    },
+    {
+      "parameters": {},
+      "id": "day2-manual-trigger",
+      "name": "Déclencheur Manuel",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        260,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "day2-manual-input",
+              "name": "chatInput",
+              "value": "Quelle règle pédagogique explique qu'un écart URSSAF trop important doit devenir une exception d'audit ? Cite la règle et la limite de la réponse.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "day2-manual-input-node",
+      "name": "Entrée de test mainteneur",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        520,
+        520
+      ]
     },
     {
       "parameters": {
@@ -210,6 +245,28 @@
   ],
   "connections": {
     "Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Question documentaire",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Déclencheur Manuel": {
+      "main": [
+        [
+          {
+            "node": "Entrée de test mainteneur",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entrée de test mainteneur": {
       "main": [
         [
           {

@@ -25,6 +25,8 @@ Les apprenants n'ont pas à préparer l'indexation ni à manipuler l'infrastruct
 - nom du workflow : `Jour 2 - Fiabilité et RAG`
 - fichier cible dans le repo : `n8n/workflows/day2_rag_fiabilite.json`
 
+Le lab apprenant utilise le **Chat Trigger**. Un second chemin **Déclencheur Manuel** peut exister dans le workflow pour les tests mainteneur et les vérifications sans chat public ; il ne change pas le parcours attendu côté apprenant.
+
 ## Étapes
 
 ### Étape 1 — Formuler une question vérifiable
@@ -57,6 +59,20 @@ Ajoutez un nœud de synthèse finale qui met côte à côte :
 - la branche sourcée cite effectivement le corpus
 - le workflow sait signaler qu'une réponse est incomplète
 - les apprenants peuvent expliquer pourquoi la réponse sourcée est plus exploitable
+
+## Prompts d'essai
+
+Vous pouvez tester avec des questions comme :
+
+- `Quelle règle pédagogique explique qu'un écart URSSAF trop important doit devenir une exception d'audit ? Cite la règle et la limite de la réponse.`
+- `Dans le corpus, quelle règle relie une date de sortie présente et un statut de paie encore ACTIF ?`
+- `Quelle preuve documentaire est attendue lorsqu'un montant URSSAF observé ne correspond pas au montant attendu ?`
+
+Pour la comparaison libre vs sourcée, demandez-vous à chaque test :
+
+- la branche libre répond-elle de manière plausible mais générale ?
+- la branche sourcée cite-t-elle une règle, un identifiant ou une preuve attendue ?
+- le workflow sait-il dire quand le corpus ne suffit pas ?
 
 ## Sortie attendue
 

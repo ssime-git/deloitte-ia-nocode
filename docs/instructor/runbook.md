@@ -117,10 +117,13 @@ make ps
 
 Puis verifier le jour cible dans `n8n` avant l'entree en salle :
 
-- J1 a J3 : le workflow s'ouvre, les credentials sont resolus, et une execution nominale produit la sortie attendue sans etape d'infrastructure cote apprenant
+- J1 et J2 : le workflow apprenant reste `chat-first`, mais un chemin `Déclencheur Manuel -> Entrée de test mainteneur` peut être utilisé par le formateur pour vérifier rapidement l'exécution sans dépendre du chat public
+- J3 : `Jour 3 - Premier workflow utile` produit une sortie exploitable sur son entrée de test
 - J4 : `Jour 4 - Contrôles et exceptions` produit bien une liste d'exceptions exploitable sur le jeu fictif
 - J5 : `Jour 5 - Agents et validation humaine` atteint le point `HITL` et suit correctement les branches valide/rejete
 - J6 : `Jour 6 - MCP guidé` execute la comparaison branche libre / branche `MCP` sans debug cote apprenant
 - J7 : `Jour 7 - Projet final` assemble le socle requis Jour 4 + Jour 5, avec sourcing Jour 2 si le scenario l'exige, sans etape cachee de reinitialisation
+
+Exemple de verification mainteneur rapide pour J1/J2 : ouvrez le workflow, lancez `Déclencheur Manuel`, puis verifiez que l'entree de test remplit bien `chatInput` avant la convergence vers le flux principal.
 
 Si une journee ne passe pas ce controle, traiter le probleme avant la session ou preparer un plan de repli explicite.

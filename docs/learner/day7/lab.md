@@ -72,6 +72,20 @@ Préparez une sortie finale lisible pour un public métier :
 - le groupe peut expliquer ce qui relève du contrôle, de la source et de la synthèse
 - le résultat final passe par une validation humaine
 
+## Prompts d'essai
+
+Vous pouvez cadrer le projet final avec des demandes comme :
+
+- `À partir d'une exception URSSAF détectée en J4, produis un brouillon de synthèse avec source documentaire et validation humaine finale.`
+- `Assemble un mini-rapport d'audit sur un écart URSSAF : constat, règle citée, limite, décision humaine attendue.`
+- `Réutilise les briques J4, J2 et J5 pour produire une synthèse courte, lisible par un responsable paie.`
+
+Pour rester dans le bon périmètre :
+
+- partez d'un seul cas ou d'une seule exception
+- n'ajoutez MCP que s'il apporte un vrai gain de contrôle
+- n'introduisez aucune étape cachée d'indexation ou de préparation hors workflow
+
 ## Sortie attendue
 
 Une synthèse finale ou un mini-rapport contenant :

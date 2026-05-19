@@ -52,6 +52,20 @@ Ajoutez un nœud final qui synthétise :
 - la sortie finale explique la différence entre réponse libre et réponse contrôlée
 - le lab ne dérive pas vers le débogage du serveur
 
+## Prompts d'essai
+
+Vous pouvez tester avec des questions comme :
+
+- `Quelle règle décrit l'écart entre un montant URSSAF observé et le montant attendu base_urssaf * taux_urssaf ? Compare une réponse naïve et une réponse contrôlée par MCP.`
+- `Quel contrôle documentaire du corpus permet de justifier qu'un statut de paie ACTIF avec une date de sortie doit être traité comme anomalie ?`
+- `Quel outil MCP permet de retrouver une base documentaire ou un périmètre d'audit sans inventer de source ?`
+
+Bon réflexe pendant le lab :
+
+- commencez par une question assez précise pour qu'un outil borné ait un avantage visible
+- comparez explicitement `réponse libre`, `réponse contrôlée`, `limites`
+- notez ce que MCP améliore en termes de gouvernance, pas seulement en termes de style de réponse
+
 ## Sortie attendue
 
 Une synthèse finale contenant :
